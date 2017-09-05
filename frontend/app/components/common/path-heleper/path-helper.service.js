@@ -186,6 +186,9 @@ function PathHelper() {
     apiV3AvailableProjectsPath: function() {
       return PathHelper.apiV3WorkPackagesPath() + '/available_projects';
     },
+    apiv3MentionablePrincipalsPath: function(projectId, term) {
+      return PathHelper.apiV3 + '/principals?filters=[{"status":{"operator":"!","values":["0","3"]}},{"member":{"operator":"=","values":["' + projectId + '"]}},{"type":{"operator":"=","values":["User"]}},{"name":{"operator":"~","values":["' + term + '"]}}]&sortBy=[["name","asc"]]';
+    },
     apiv3ProjectWorkPackagesPath: function(projectIdentifier) {
       return PathHelper.apiV3ProjectPath(projectIdentifier) + '/work_packages';
     },
