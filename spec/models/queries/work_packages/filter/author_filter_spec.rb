@@ -108,7 +108,8 @@ describe Queries::WorkPackages::Filter::AuthorFilter, type: :model do
             .and_return([[user_1.name, user_1.id.to_s]])
 
           expect(instance.allowed_values)
-            .to match_array([[I18n.t(:label_me), 'me'],
+            .to match_array([[I18n.t(:label_me), '/api/v3/me'],
+                             [I18n.t(:label_me), 'me'],
                              [user_1.name, user_1.id.to_s]])
         end
       end

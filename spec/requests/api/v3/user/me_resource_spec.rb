@@ -1,5 +1,3 @@
-#-- encoding: UTF-8
-
 #-- copyright
 # OpenProject is a project management system.
 # Copyright (C) 2012-2017 the OpenProject Foundation (OPF)
@@ -28,65 +26,38 @@
 # See doc/COPYRIGHT.rdoc for more details.
 #++
 
-class Queries::WorkPackages::Filter::AssigneeOrGroupFilter <
-  Queries::WorkPackages::Filter::PrincipalBaseFilter
-  def allowed_values
-    @allowed_values ||= begin
-      values = principal_loader.user_values
+require 'spec_helper'
+require 'rack/test'
 
-      if Setting.work_package_group_assignment?
-        values += principal_loader.group_values
-      end
+describe 'API v3 Me resource', type: :request do
+  include Rack::Test::Methods
+  include API::V3::Utilities::PathHelper
 
-      me_allowed_value + values.sort
+  subject(:response) { last_response }
+
+  context 'when not logged in' do
+    before do
+      get api_v3_paths.me
+    end
+
+    it 'returns a 404' do
+      expect(subject.status).to eql(404)
     end
   end
 
-  def type
-    :list_optional
-  end
+  context 'when logged in' do
+    let(:current_user) { FactoryGirl.create(:user) }
 
-  def order
-    4
-  end
+    before do
+      allow(User).to receive(:current).and_return current_user
+      get api_v3_paths.me
+    end
 
-  def human_name
-    I18n.t('query_fields.assignee_or_group')
-  end
-
-  def self.key
-    :assignee_or_group
-  end
-
-  def where
-    operator_strategy.sql_for_field(
-      values_replaced,
-      self.class.model.table_name,
-      'assigned_to_id'
-    )
-  end
-
-  private
-
-  def values_replaced
-    vals = super
-    vals += group_members_added(vals)
-    vals + user_groups_added(vals)
-  end
-
-  def group_members_added(vals)
-    User
-      .joins(:groups)
-      .where(groups_users: { id: vals })
-      .pluck(:id)
-      .map(&:to_s)
-  end
-
-  def user_groups_added(vals)
-    Group
-      .joins(:users)
-      .where(users_users: { id: vals })
-      .pluck(:id)
-      .map(&:to_s)
+    it 'responds with the current user represented' do
+      expect(subject.status).to eq(200)
+      expect(subject.body)
+        .to be_json_eql(current_user.name.to_json)
+              .at_path('name')
+    end
   end
 end

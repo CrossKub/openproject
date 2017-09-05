@@ -311,6 +311,10 @@ module API
             "#{users}/#{id}"
           end
 
+          def self.me
+            "#{root}/me"
+          end
+
           class << self
             alias :groups :users
             alias :group :user

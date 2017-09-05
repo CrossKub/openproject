@@ -1,5 +1,3 @@
-#-- encoding: UTF-8
-
 #-- copyright
 # OpenProject is a project management system.
 # Copyright (C) 2012-2017 the OpenProject Foundation (OPF)
@@ -28,65 +26,25 @@
 # See doc/COPYRIGHT.rdoc for more details.
 #++
 
-class Queries::WorkPackages::Filter::AssigneeOrGroupFilter <
-  Queries::WorkPackages::Filter::PrincipalBaseFilter
-  def allowed_values
-    @allowed_values ||= begin
-      values = principal_loader.user_values
+require 'api/v3/users/user_representer'
+require 'api/v3/users/paginated_user_collection_representer'
 
-      if Setting.work_package_group_assignment?
-        values += principal_loader.group_values
+module API
+  module V3
+    module Users
+      class MeAPI < ::API::OpenProjectAPI
+        resources :me do
+          before do
+            if current_user.nil? || current_user.anonymous?
+              fail ::API::Errors::NotFound, I18n.t('api_v3.errors.code_404')
+            end
+          end
+
+          get do
+            UserRepresenter.new(current_user, current_user: current_user)
+          end
+        end
       end
-
-      me_allowed_value + values.sort
     end
-  end
-
-  def type
-    :list_optional
-  end
-
-  def order
-    4
-  end
-
-  def human_name
-    I18n.t('query_fields.assignee_or_group')
-  end
-
-  def self.key
-    :assignee_or_group
-  end
-
-  def where
-    operator_strategy.sql_for_field(
-      values_replaced,
-      self.class.model.table_name,
-      'assigned_to_id'
-    )
-  end
-
-  private
-
-  def values_replaced
-    vals = super
-    vals += group_members_added(vals)
-    vals + user_groups_added(vals)
-  end
-
-  def group_members_added(vals)
-    User
-      .joins(:groups)
-      .where(groups_users: { id: vals })
-      .pluck(:id)
-      .map(&:to_s)
-  end
-
-  def user_groups_added(vals)
-    Group
-      .joins(:users)
-      .where(users_users: { id: vals })
-      .pluck(:id)
-      .map(&:to_s)
   end
 end

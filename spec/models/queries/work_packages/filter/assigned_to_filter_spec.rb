@@ -55,7 +55,7 @@ describe Queries::WorkPackages::Filter::AssignedToFilter, type: :model do
       end
     end
 
-    context 'for the me value with the user being logged in' do
+    context 'for the old me value with the user being logged in' do
       let(:values) { ['me'] }
 
       before do
@@ -70,13 +70,51 @@ describe Queries::WorkPackages::Filter::AssignedToFilter, type: :model do
       end
     end
 
-    context 'for the me value with another user being logged in' do
+    context 'for the new me value with the user being logged in' do
+      let(:values) { ['/api/v3/me'] }
+
+      before do
+        allow(User)
+          .to receive(:current)
+                .and_return(assignee)
+      end
+
+      it 'returns the work package' do
+        is_expected
+          .to match_array [work_package]
+      end
+
+      it 'returns the corrected value object' do
+        objects = instance.value_objects_hash
+
+        expect(objects.size).to eq(1)
+        expect(objects.first[:href]).to eq '/api/v3/me'
+        expect(objects.first[:name]).to eq 'me'
+      end
+    end
+
+    context 'for the old me value with another user being logged in' do
       let(:values) { ['me'] }
 
       before do
         allow(User)
           .to receive(:current)
           .and_return(FactoryGirl.create(:user))
+      end
+
+      it 'does not return the work package' do
+        is_expected
+          .to be_empty
+      end
+    end
+
+    context 'for the new me value with another user being logged in' do
+      let(:values) { ['/api/v3/me'] }
+
+      before do
+        allow(User)
+          .to receive(:current)
+                .and_return(FactoryGirl.create(:user))
       end
 
       it 'does not return the work package' do

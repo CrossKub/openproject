@@ -144,7 +144,8 @@ describe Queries::WorkPackages::Filter::AssignedToFilter, type: :model do
       context 'when being logged in' do
         it 'returns the me value and the available users and groups' do
           expect(instance.allowed_values)
-            .to match_array([[I18n.t(:label_me), 'me'],
+            .to match_array([[I18n.t(:label_me), '/api/v3/me'],
+                             [I18n.t(:label_me), 'me'],
                              [user_1.name, user_1.id.to_s],
                              [group_1.name, group_1.id.to_s]])
         end
@@ -155,7 +156,8 @@ describe Queries::WorkPackages::Filter::AssignedToFilter, type: :model do
             .and_return(false)
 
           expect(instance.allowed_values)
-            .to match_array([[I18n.t(:label_me), 'me'],
+            .to match_array([[I18n.t(:label_me), '/api/v3/me'],
+                             [I18n.t(:label_me), 'me'],
                              [user_1.name, user_1.id.to_s]])
         end
       end
